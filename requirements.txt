@@ -2,3 +2,5 @@ pandas
 matplotlib
 yfinance
 numpy
+plotly
+pandas_datareader
