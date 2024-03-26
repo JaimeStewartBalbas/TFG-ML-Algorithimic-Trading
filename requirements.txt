@@ -4,3 +4,5 @@ yfinance
 numpy
 plotly
 pandas_datareader
+tkinterhtml
+ib_insync
