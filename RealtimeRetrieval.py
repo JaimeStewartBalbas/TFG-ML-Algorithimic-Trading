@@ -1,9 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 import mplfinance as mpf
-import threading
 import yfinance as yf
 
 class RealTimeCandlestick:
@@ -20,10 +18,10 @@ class RealTimeCandlestick:
         self.canvas_widget.pack(fill=tk.BOTH, expand=True)
 
     def update_graph(self):
-        ibex_data = yf.download("^IBEX", period="2h", interval="1m",progress=False)
+        self.ax.clear()  # Clear the previous chart
+        ibex_data = yf.download("^IBEX", period="2h", interval="1m", progress=False)
         mpf.plot(ibex_data, type='candle', style='charles', ax=self.ax, volume=False, tight_layout=True)
         self.canvas.draw()
-
         # Schedule next update after 10 seconds
         self.root.after(10000, self.update_graph)
 
