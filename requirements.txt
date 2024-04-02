@@ -11,3 +11,4 @@ scikit-learn
 keras
 statsmodels
 tensorflow
+scikeras

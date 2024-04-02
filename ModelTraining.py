@@ -10,6 +10,7 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, GRU
 import matplotlib.pyplot as plt
+import yfinance as yf
 
 from DataRetrieval import HistoricalDataRetrieval
 
@@ -63,7 +64,7 @@ class ModelTrainer(object):
         train_data = scaled_df[0:training_data_len, :]
         x_train = []
         y_train = []
-        self.window_size = 30
+        self.window_size = 100
         for i in range(self.window_size, len(train_data)):
             x_train.append(train_data[i - self.window_size:i, 0])
             y_train.append(train_data[i, 0])
@@ -96,7 +97,7 @@ class ModelTrainer(object):
             self.model.compile(optimizer='adam', loss='mean_squared_error')
             self.x_train = np.reshape(self.x_train,
                                       (self.x_train.shape[0], self.x_train.shape[1], 1))  # Reshape for LSTM
-            self.model.fit(self.x_train, self.y_train, epochs=10, batch_size=32)
+            self.model.fit(self.x_train, self.y_train, epochs=15, batch_size=32)
         elif self.model_id == 3:  # Gradient Boosting
             self.model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=1,
                                                    random_state=42, loss='squared_error')
@@ -117,7 +118,7 @@ class ModelTrainer(object):
         predictions = self.model.predict(self.x_test)
         predictions = predictions.reshape(-1, 1)
         self.predictions = self.scaler.inverse_transform(predictions)
-        print(self.predictions)
+        self.predictions
         rmse = np.sqrt(np.mean(self.predictions - self.y_test) ** 2)
         print("RMSE: " + str(rmse))
 
@@ -132,39 +133,58 @@ class ModelTrainer(object):
         plt.legend(['test', 'predictions'], loc='lower right')
         plt.show()
 
-    def predict_future(self, n_days):
-        """Predict n days into the future."""
-        # Get the last window of data from the training set
-        last_window = self.data[-self.window_size:].values  # Convert DataFrame to NumPy array
-        # Scale the last window
-        last_window_scaled = self.scaler.transform(last_window.reshape(-1, 1))
-        # Create a list to store the predicted values
-        future_predictions = []
+    def predict_future(self, num_days):
+        """Predict future stock prices."""
 
-        for _ in range(n_days):
-            # Reshape the last window for prediction
-            x_future = last_window_scaled[-self.window_size:].reshape(1, -1)
-            # Predict the next day's closing price
-            prediction = self.model.predict(x_future)
-            # Inverse transform the prediction
+        last_window = self.data[-self.window_size:].copy()
+        future_predictions = []
+        for _ in range(num_days):
+            # Extract only the closing price from the last window
+            window = np.array(last_window["Close"].values[-self.window_size:]).reshape(-1, 1)
+            scaled_window = self.scaler.transform(window)
+
+            # Reshape for models expecting sequences (LSTM, GRU)
+            if self.model_id in [2, 6]:
+                scaled_window = np.reshape(scaled_window, (1, self.window_size, 1))
+            else:
+                scaled_window = scaled_window.T
+            prediction = self.model.predict(scaled_window)
             prediction = self.scaler.inverse_transform(prediction.reshape(-1, 1))
-            # Append the prediction to the list
-            print(prediction)
             future_predictions.append(prediction[0][0])
-            # Update the last window to include the predicted value
-            last_window_scaled = np.append(last_window_scaled, prediction).reshape(-1, 1)[-self.window_size:]
+
+            # Append the predicted value to the last window
+            last_window.loc[len(last_window)] = {"Close": prediction[0][0]}
 
         return future_predictions
 
+
+def plot_values(values, actual_values, title="Predicted vs Actual", xlabel="Days", ylabel="Price"):
+    """Plot predicted and actual values."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(values, label='Predicted', color='blue')
+    plt.plot(actual_values, label='Actual', color='green')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
-    data = HistoricalDataRetrieval('IBEX', '^IBEX', 6*365) # Assuming HistoricalDataRetrieval is defined somewhere
+    data = HistoricalDataRetrieval('IBEX', '^IBEX', start_date='2010-01-01', end_date='2024-01-01')
     model_trainer = ModelTrainer(data.stock)
     model_trainer.prepare_data()
     model_trainer.train_model()
     model_trainer.test_model()
     model_trainer.graph_predictions()
-    #print(model_trainer.predict_future(10))
+    predictions = model_trainer.predict_future(100)
+
+    # Retrieve actual market values for the same period as the predictions
+    ticker = '^IBEX'
+    start_date_actual = '2024-01-01'  # One day after the last training data
+    end_date_actual = '2024-03-10'
+    actual_data = yf.download(ticker, start=start_date_actual, end=end_date_actual)['Close'].values
+    plot_values(predictions, actual_data)

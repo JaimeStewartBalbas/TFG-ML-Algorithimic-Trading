@@ -2,15 +2,16 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 import time
 class HistoricalDataRetrieval(object):
-    def __init__(self, name, ticker, days=365):
+    def __init__(self, name, ticker, start_date, end_date):
         self.ticker = ticker
         self.name = name
-        self.days = days
+        self.start_date = start_date
+        self.end_date = end_date
         self.stock = self.retrieve_data()
 
     def retrieve_data(self):
         # Retrieve stock data
-        stock_data = yf.download(self.ticker, period=str(self.days) + 'd')
+        stock_data = yf.download(self.ticker, start=self.start_date, end=self.end_date)
 
         # Resample data to exclude weekends
         stock_data = stock_data.resample('B').ffill()
