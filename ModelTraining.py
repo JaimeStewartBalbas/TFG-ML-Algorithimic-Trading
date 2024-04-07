@@ -1,8 +1,7 @@
+import random
 import tkinter as tk
 from tkinter import messagebox
-import random
 import numpy as np
-import pandas as pd
 import math
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVR
@@ -10,9 +9,14 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, GRU
 import matplotlib.pyplot as plt
+import pickle
+import os
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
 import yfinance as yf
-
 from DataRetrieval import HistoricalDataRetrieval
+import json
 
 Model = {
     "SVM": 0,
@@ -64,7 +68,7 @@ class ModelTrainer(object):
         train_data = scaled_df[0:training_data_len, :]
         x_train = []
         y_train = []
-        self.window_size = 100
+        self.window_size = 30
         for i in range(self.window_size, len(train_data)):
             x_train.append(train_data[i - self.window_size:i, 0])
             y_train.append(train_data[i, 0])
@@ -133,6 +137,61 @@ class ModelTrainer(object):
         plt.legend(['test', 'predictions'], loc='lower right')
         plt.show()
 
+    def save_model(self):
+        """This method saves the model in a file system, encrypted with AES-256."""
+        model_type = list(Model.keys())[self.model_id]
+        filename = './models/' + model_type + '.enc'
+        if self.model is not None:
+            # Generate a random 32-byte key for AES-256
+            key = os.urandom(32)
+            # Generate a random 16-byte IV for AES-CBC
+            iv = os.urandom(16)
+
+            encrypted_model = self.encrypt_model(self.model, key, iv)
+
+            # Write the encryption keys to a file
+            key_iv_filename = './keys.json'
+            with open(key_iv_filename, 'wb') as key_file:
+                key_file.write(json.dumps({"AES_KEY": key.hex(), "IV_KEY": iv.hex()}).encode())
+
+            # Write the encrypted model to the file
+            with open(filename, 'wb') as file:
+                file.write(len(key).to_bytes(1, byteorder='big'))  # Write the key size (32 bytes) as a header
+                file.write(encrypted_model)
+
+            print("Model saved successfully.")
+        else:
+            print("No model to save. Train a model first.")
+
+    def encrypt_model(self, model, key, iv):
+        """Serialize and encrypt the model."""
+        if isinstance(model, (str, bytes)):  # If model is already serialized (for Keras models)
+            serialized_model = model if isinstance(model, bytes) else model.encode()
+        elif list(Model.keys())[self.model_id] in ['LSTM', 'GRU']:  # For TensorFlow Keras models
+            serialized_model = model.to_json()
+        else:  # For scikit-learn models
+            serialized_model = pickle.dumps(model)
+
+        # Convert serialized_model to bytes if it's not already
+        if not isinstance(serialized_model, bytes):
+            serialized_model = serialized_model.encode()
+
+        # Pad the serialized model to a multiple of the block size
+        padder = padding.PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(serialized_model) + padder.finalize()
+
+        # Encrypt the padded serialized model
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        encrypted_model = encryptor.update(padded_data) + encryptor.finalize()
+
+        return encrypted_model
+
+
+
+
+
+
     def predict_future(self, num_days):
         """Predict future stock prices."""
 
@@ -174,17 +233,18 @@ def plot_values(values, actual_values, title="Predicted vs Actual", xlabel="Days
 if __name__ == "__main__":
     random.seed(42)
     np.random.seed(42)
-    data = HistoricalDataRetrieval('IBEX', '^IBEX', start_date='2010-01-01', end_date='2024-01-01')
+    data = HistoricalDataRetrieval('IBEX', '^IBEX', start_date='2004-01-01', end_date='2024-01-01')
     model_trainer = ModelTrainer(data.stock)
     model_trainer.prepare_data()
     model_trainer.train_model()
     model_trainer.test_model()
     model_trainer.graph_predictions()
-    predictions = model_trainer.predict_future(100)
+    model_trainer.save_model()
+    predictions = model_trainer.predict_future(10)
 
     # Retrieve actual market values for the same period as the predictions
     ticker = '^IBEX'
     start_date_actual = '2024-01-01'  # One day after the last training data
-    end_date_actual = '2024-03-10'
+    end_date_actual = '2024-01-11'
     actual_data = yf.download(ticker, start=start_date_actual, end=end_date_actual)['Close'].values
     plot_values(predictions, actual_data)

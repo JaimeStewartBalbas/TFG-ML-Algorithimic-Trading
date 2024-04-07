@@ -12,3 +12,4 @@ keras
 statsmodels
 tensorflow
 scikeras
+cryptography
