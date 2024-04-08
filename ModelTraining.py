@@ -13,8 +13,6 @@ import pickle
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import padding
-import yfinance as yf
 from DataRetrieval import HistoricalDataRetrieval
 import json
 
