@@ -110,7 +110,6 @@ class ModelTrainer(object):
         predictions = self.model.predict(self.x_test)
         predictions = predictions.reshape(-1, 1)
         self.predictions = self.scaler.inverse_transform(predictions)
-        self.predictions
         rmse = np.sqrt(np.mean(self.predictions - self.y_test) ** 2)
         print("RMSE: " + str(rmse))
 
