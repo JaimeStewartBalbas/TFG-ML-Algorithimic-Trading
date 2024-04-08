@@ -27,11 +27,11 @@ class ModelTrainer(object):
     def __init__(self, full_data):
         self.x_train = None
         self.y_train = None
-        self.model_id = self.select_model()
+        self.model_id = self.__select_model()
         self.model = None
         self.data = full_data
 
-    def select_model(self):
+    def __select_model(self):
         """This method is used to select the model through the Tkinter interface."""
         root = tk.Tk()
         root.title("Select Model")
