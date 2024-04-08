@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, GRU
+from tensorflow.keras.layers import LSTM, Dense
 import matplotlib.pyplot as plt
 import pickle
 import os
@@ -22,8 +22,7 @@ Model = {
     "SVM": 0,
     "RANDOMFOREST": 1,
     "LSTM": 2,
-    "GRADIENTBOOSTING": 3,
-    "GRU": 6,
+    "GRADIENTBOOSTING": 3
 }
 
 class ModelTrainer(object):
@@ -79,8 +78,8 @@ class ModelTrainer(object):
         self.x_test = np.array(x_test)
         self.y_test = df[training_data_len:, :]
         self.x_train, self.y_train = np.array(x_train), np.array(y_train)
-        # For LSTM and GRU models, reshape the data
-        if self.model_id in [2, 6]:  # LSTM or GRU
+
+        if self.model_id in [2]:
             self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 1))
             self.x_test = np.reshape(self.x_test, (self.x_test.shape[0], self.x_test.shape[1], 1))
         return self.x_train, self.y_train, self.x_test, self.y_test
@@ -106,16 +105,7 @@ class ModelTrainer(object):
             self.model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=1,
                                                    random_state=42, loss='squared_error')
             self.model.fit(self.x_train, self.y_train)
-        elif self.model_id == 6:  # GRU
-            self.model = Sequential()
-            self.model.add(GRU(units=50, return_sequences=True, input_shape=(self.x_train.shape[1], 1)))
-            self.model.add(GRU(units=50, return_sequences=False))
-            self.model.add(Dense(units=25))
-            self.model.add(Dense(units=1))
-            self.model.compile(optimizer='adam', loss='mean_squared_error')
-            self.x_train = np.reshape(self.x_train,
-                                      (self.x_train.shape[0], self.x_train.shape[1], 1))  # Reshape for GRU
-            self.model.fit(self.x_train, self.y_train, epochs=10, batch_size=32)
+
 
 
     def test_model(self):
@@ -149,10 +139,27 @@ class ModelTrainer(object):
 
             encrypted_model = self.encrypt_model(self.model, key, iv)
 
-            # Write the encryption keys to a file
+            # Load existing keys from JSON file
             key_iv_filename = './keys.json'
-            with open(key_iv_filename, 'wb') as key_file:
-                key_file.write(json.dumps({"AES_KEY": key.hex(), "IV_KEY": iv.hex()}).encode())
+            if os.path.exists(key_iv_filename):
+                with open(key_iv_filename, 'r') as key_file:
+                    existing_keys = json.load(key_file)
+            else:
+                existing_keys = []
+
+            # Check if the model_id already exists in the list
+            existing_entry = next((entry for entry in existing_keys if entry["model_id"] == str(self.model_id)), None)
+
+            if existing_entry:
+                # Update existing entry
+                existing_entry.update({"AES_KEY": key.hex(), "IV_KEY": iv.hex()})
+            else:
+                # Add new entry to the list
+                existing_keys.append({"model_id": str(self.model_id), "AES_KEY": key.hex(), "IV_KEY": iv.hex()})
+
+            # Write updated keys to JSON file
+            with open(key_iv_filename, 'w') as key_file:
+                json.dump(existing_keys, key_file)
 
             # Write the encrypted model to the file
             with open(filename, 'wb') as file:
@@ -167,7 +174,7 @@ class ModelTrainer(object):
         """Serialize and encrypt the model."""
         if isinstance(model, (str, bytes)):  # If model is already serialized (for Keras models)
             serialized_model = model if isinstance(model, bytes) else model.encode()
-        elif list(Model.keys())[self.model_id] in ['LSTM', 'GRU']:  # For TensorFlow Keras models
+        elif list(Model.keys())[self.model_id] in ['LSTM']:  # For TensorFlow Keras models
             serialized_model = model.to_json()
         else:  # For scikit-learn models
             serialized_model = pickle.dumps(model)
@@ -192,42 +199,6 @@ class ModelTrainer(object):
 
 
 
-    def predict_future(self, num_days):
-        """Predict future stock prices."""
-
-        last_window = self.data[-self.window_size:].copy()
-        future_predictions = []
-        for _ in range(num_days):
-            # Extract only the closing price from the last window
-            window = np.array(last_window["Close"].values[-self.window_size:]).reshape(-1, 1)
-            scaled_window = self.scaler.transform(window)
-
-            # Reshape for models expecting sequences (LSTM, GRU)
-            if self.model_id in [2, 6]:
-                scaled_window = np.reshape(scaled_window, (1, self.window_size, 1))
-            else:
-                scaled_window = scaled_window.T
-            prediction = self.model.predict(scaled_window)
-            prediction = self.scaler.inverse_transform(prediction.reshape(-1, 1))
-            future_predictions.append(prediction[0][0])
-
-            # Append the predicted value to the last window
-            last_window.loc[len(last_window)] = {"Close": prediction[0][0]}
-
-        return future_predictions
-
-
-def plot_values(values, actual_values, title="Predicted vs Actual", xlabel="Days", ylabel="Price"):
-    """Plot predicted and actual values."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(values, label='Predicted', color='blue')
-    plt.plot(actual_values, label='Actual', color='green')
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend()
-    plt.grid(True)
-    plt.show()
 
 
 if __name__ == "__main__":
@@ -240,11 +211,3 @@ if __name__ == "__main__":
     model_trainer.test_model()
     model_trainer.graph_predictions()
     model_trainer.save_model()
-    predictions = model_trainer.predict_future(10)
-
-    # Retrieve actual market values for the same period as the predictions
-    ticker = '^IBEX'
-    start_date_actual = '2024-01-01'  # One day after the last training data
-    end_date_actual = '2024-01-11'
-    actual_data = yf.download(ticker, start=start_date_actual, end=end_date_actual)['Close'].values
-    plot_values(predictions, actual_data)
