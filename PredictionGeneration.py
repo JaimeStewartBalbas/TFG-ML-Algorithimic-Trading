@@ -24,7 +24,7 @@ class PredictionGeneration:
         self.window_size = window_size
         self.model_id = model_id
         self.data = yf.download('^IBEX',start='2004-01-01', end='2024-01-01').filter(['Close'])
-        self.model = None  # Initialize the model attribute
+        self.model = None
         self.scaler.fit_transform(np.array(self.data).reshape(-1, 1))
 
     def read_and_decrypt_model(self):
@@ -52,9 +52,9 @@ class PredictionGeneration:
     def load_model(self, decrypted_model):
         """Load the decrypted model."""
         if list(Model.keys())[self.model_id] in ['LSTM']:  # For TensorFlow Keras models
-            self.model = model_from_json(decrypted_model)  # Load directly from decrypted model data
+            self.model = model_from_json(decrypted_model)
         else:  # For scikit-learn models
-            self.model = pickle.loads(decrypted_model)  # Load directly from decrypted model data
+            self.model = pickle.loads(decrypted_model)
 
     def predict_future(self, num_days):
         """Predict future stock prices."""
@@ -98,8 +98,8 @@ class PredictionGeneration:
         plt.show()
 
 if __name__ == '__main__':
-    model_file = './models/LSTM.enc'
-    model_id = Model["LSTM"]
+    model_file = './models/SVM.enc'
+    model_id = Model["SVM"]
     prediction_generator = PredictionGeneration(model_path=model_file, window_size=30, model_id=model_id)
 
     decrypted_model = prediction_generator.read_and_decrypt_model()

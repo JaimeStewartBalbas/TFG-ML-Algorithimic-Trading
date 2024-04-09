@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import messagebox
 import numpy as np
 import math
+
+from cryptography.hazmat.primitives import padding
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
@@ -190,12 +192,6 @@ class ModelTrainer(object):
         encrypted_model = encryptor.update(padded_data) + encryptor.finalize()
 
         return encrypted_model
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
