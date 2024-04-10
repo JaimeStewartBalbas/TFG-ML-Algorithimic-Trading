@@ -12,8 +12,6 @@ class HistoricalDataRetrieval(object):
     def retrieve_data(self):
         # Retrieve stock data
         stock_data = yf.download(self.ticker, start=self.start_date, end=self.end_date)
-
-        # Resample data to exclude weekends
         stock_data = stock_data.resample('B').ffill()
 
         return stock_data
