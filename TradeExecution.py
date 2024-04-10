@@ -1,41 +1,72 @@
+import json
+import threading
+import time
+
+
 class TradeExecution:
-
-    def __init__(self, budget, predictions):
-        self.budget = budget
+    def __init__(self, predictions):
         self.predictions = predictions
-        self.trades = []
-        self.current_stock = 0
-        self.total_gains = 0
 
-    def simulate_trading(self):
-        for i, price in enumerate(self.predictions):
-            if i == 0:
-                continue  # Skip the first day, as there's no previous price to compare with
-            if price > self.predictions[i - 1]:  # If the price is rising, buy
-                self.__buy(price)
-            elif price < self.predictions[i - 1]:  # If the price is falling, sell
-                self.__sell(price)
+    def maximize_profit(self, output_file):
+        if not self.predictions or len(self.predictions) < 2:
+            print("No profit can be made.")
+            return 0
 
-    def __buy(self, price):
-        shares_to_buy = min(self.budget // price, 1000)  # Maximum buy limit to prevent excessive exposure
-        total_cost = shares_to_buy * price
-        if shares_to_buy > 0:
-            self.budget -= total_cost
-            self.current_stock += shares_to_buy
-            self.trades.append(('buy', shares_to_buy, price))
+        actions = []
+        total_profit = 0
+        for i in range(len(self.predictions) - 1):
+            if self.predictions[i] < self.predictions[i + 1]:
+                # Buy when price is lower than the next day's price
+                buy_price = self.predictions[i]
+                sell_price = self.predictions[i + 1]
+                profit = sell_price - buy_price
+                total_profit += profit
+                actions.append({"operation": "buy", "Day": i + 1})
+                actions.append({"operation": "sell", "Day": i + 2})
 
-    def __sell(self, price):
-        if self.current_stock > 0:
-            self.total_gains += self.current_stock * price - (self.current_stock * self.predictions[self.predictions.index(price) - 1])
-            self.budget += self.current_stock * price
-            self.trades.append(('sell', self.current_stock, price))
-            self.current_stock = 0
+        if total_profit > 0:
+            actions.append({"Total gains": total_profit})
+
+        # Write actions to a JSON file
+        with open(output_file, "w") as json_file:
+            json.dump(actions, json_file, indent=4)
+
+        return total_profit
+
+    def simulate_trades(self, input_file):
+        with open(input_file, "r") as json_file:
+            actions = json.load(json_file)
+
+        for action in actions:
+            if action.get("operation") == "buy":
+                day = action.get("Day")
+                print(f"Waiting until day {day} to buy...")
+                while True:
+                    current_day = len(self.predictions)
+                    if current_day >= day:
+                        print(f"Buying on day {day}.")
+                        # Perform buying action here
+                        break
+                    time.sleep(1)  # Check every second until the expected day
+            elif action.get("operation") == "sell":
+                day = action.get("Day")
+                print(f"Waiting until day {day} to sell...")
+                while True:
+                    current_day = len(self.predictions)
+                    if current_day >= day:
+                        print(f"Selling on day {day}.")
+                        # Perform selling action here
+                        break
+                    time.sleep(1)
+        print("Simulation complete.")
+
 
 if __name__ == '__main__':
-    # Example usage
+
     ibex_predictions = [10000, 12000, 8000, 15000, 10000]
-    ibex_budget = 100000
-    trade_execution = TradeExecution(ibex_budget, ibex_predictions)
-    trade_execution.simulate_trading()
-    print(trade_execution.trades)
-    print("Total gains:", trade_execution.total_gains)
+    trade_execution = TradeExecution(ibex_predictions)
+    profit = trade_execution.maximize_profit("/operations/actions.json")
+
+    # Simulate trades on a separate thread
+    trader = threading.Thread(target=trade_execution.simulate_trades, args=("/operations/actions.json",))
+    trader.start()

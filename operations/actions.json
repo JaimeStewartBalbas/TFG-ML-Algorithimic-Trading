@@ -1,0 +1,21 @@
+[
+    {
+        "operation": "buy",
+        "Day": 1
+    },
+    {
+        "operation": "sell",
+        "Day": 2
+    },
+    {
+        "operation": "buy",
+        "Day": 3
+    },
+    {
+        "operation": "sell",
+        "Day": 4
+    },
+    {
+        "Total gains": 9000
+    }
+]
