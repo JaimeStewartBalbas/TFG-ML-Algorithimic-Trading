@@ -1,8 +1,7 @@
 import json
 import threading
 import time
-
-
+import datetime
 class TradeExecution:
     def __init__(self, predictions):
         self.predictions = predictions
@@ -25,7 +24,7 @@ class TradeExecution:
                 actions.append({"operation": "sell", "Day": i + 2})
 
         if total_profit > 0:
-            actions.append({"Total gains": total_profit})
+            actions.append({"Expected total gains": total_profit})
 
         # Write actions to a JSON file
         with open(output_file, "w") as json_file:
@@ -41,23 +40,22 @@ class TradeExecution:
             if action.get("operation") == "buy":
                 day = action.get("Day")
                 print(f"Waiting until day {day} to buy...")
-                while True:
-                    current_day = len(self.predictions)
-                    if current_day >= day:
-                        print(f"Buying on day {day}.")
-                        # Perform buying action here
-                        break
-                    time.sleep(1)  # Check every second until the expected day
+                target_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(
+                    days=day - 1)
+                while datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) < target_date:
+                    pass
+                print(f"Buying on day {day}.")
+
             elif action.get("operation") == "sell":
                 day = action.get("Day")
                 print(f"Waiting until day {day} to sell...")
-                while True:
-                    current_day = len(self.predictions)
-                    if current_day >= day:
-                        print(f"Selling on day {day}.")
-                        # Perform selling action here
-                        break
-                    time.sleep(1)
+                target_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(
+                    days=day - 1)
+                while datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) < target_date:
+                    pass
+                print(f"Selling on day {day}.")
+
+
         print("Simulation complete.")
 
 
@@ -65,8 +63,8 @@ if __name__ == '__main__':
 
     ibex_predictions = [10000, 12000, 8000, 15000, 10000]
     trade_execution = TradeExecution(ibex_predictions)
-    profit = trade_execution.maximize_profit("/operations/actions.json")
+    profit = trade_execution.maximize_profit("./operations/actions.json")
 
     # Simulate trades on a separate thread
-    trader = threading.Thread(target=trade_execution.simulate_trades, args=("/operations/actions.json",))
+    trader = threading.Thread(target=trade_execution.simulate_trades, args=("./operations/actions.json",))
     trader.start()
