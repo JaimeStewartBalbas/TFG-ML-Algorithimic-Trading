@@ -53,24 +53,7 @@ class Analytics:
 
         return sum(self.actual_value) / len(self.actual_value)
 
-    def calculate_gains_from_actions(self):
-        if not self.actions:
-            print("Error: Actions not available.")
-            return None
 
-        gains = 0
-        for action in self.actions:
-            if action.get("operation") == "buy":
-                buy_day = action.get("Day")
-                sell_day = buy_day + 1
-                if 0 < buy_day <= len(self.predictions) - 1 and 0 < sell_day <= len(self.actual_value):
-                    buy_price = self.predictions[buy_day - 1]  # Adjust index
-                    sell_price = self.actual_value[sell_day - 1]  # Adjust index
-                    gains += sell_price - buy_price
-                else:
-                    print("Error: Invalid buy or sell day in actions.")
-
-        return gains
 
     def plot_graphs(self):
         if len(self.predictions) != len(self.actual_value):
@@ -100,5 +83,4 @@ if __name__ == '__main__':
     print("Percentage Error:", analytics.calculate_percentage_error())
     print("Average Prediction:", analytics.calculate_average_prediction())
     print("Average Actual Value:", analytics.calculate_average_actual_value())
-    print("Gains from actions:", analytics.calculate_gains_from_actions())
     analytics.plot_graphs()
