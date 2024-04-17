@@ -3,8 +3,16 @@ from RealtimeRetrieval import RealTimeCandlestick
 from ModelTraining import ModelTrainer
 from PredictionGeneration import Predictor
 import warnings
+import threading
+import tkinter as tk
+from Analytics import Analytics
 
 from TradeExecution import Trader
+
+def candle_thread():
+    root = tk.Tk()
+    candlestick = RealTimeCandlestick(root)
+
 
 if __name__ == '__main__':
     # We retrieve data from Historical Data Retrieval Module to train our model.
@@ -17,6 +25,10 @@ if __name__ == '__main__':
                                           ticker="^IBEX",
                                           start_date="2024-01-02",
                                           end_date="2024-02-13")
+
+    candle_thread = threading.Thread(target=candle_thread,daemon=True)
+    candle_thread.start()
+
     print(actual_data.stock)
     # We take an overview of our data.
     print(historical_data.stock)
@@ -50,5 +62,16 @@ if __name__ == '__main__':
     # We compare predictions with actual values.
     predictor.plot_values(predictions, list(actual_data.stock["Close"]))
 
-    trader = Trader(predictions=predictions)
-    trader.maximize_profit('./operations/actions.json')
+    trader = Trader(predictions=predictions,
+                    filepath='./operations/actions.json')
+    trader.maximize_profit()
+
+    analytics = Analytics(predictions=predictions,
+                          actual_value=list(actual_data.stock["Close"]),
+                          filepath="./operations/actions.json")
+
+    print("Actual Gains:", analytics.calculate_actual_gains())
+    print("Percentage Error:", analytics.calculate_percentage_error())
+    print("Average Prediction:", analytics.calculate_average_prediction())
+    print("Average Actual Value:", analytics.calculate_average_actual_value())
+

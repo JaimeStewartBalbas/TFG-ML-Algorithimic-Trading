@@ -3,10 +3,11 @@ import threading
 import time
 import datetime
 class Trader:
-    def __init__(self, predictions):
+    def __init__(self, predictions,filepath):
         self.predictions = predictions
+        self.filepath = filepath
 
-    def maximize_profit(self, output_file):
+    def maximize_profit(self):
         if not self.predictions or len(self.predictions) < 2:
             print("No profit can be made.")
             return 0
@@ -27,13 +28,13 @@ class Trader:
             actions.append({"Expected total gains": total_profit})
 
         # Write actions to a JSON file
-        with open(output_file, "w") as json_file:
+        with open(self.filepath, "w") as json_file:
             json.dump(actions, json_file, indent=4)
 
         return total_profit
 
-    def simulate_trades(self, input_file):
-        with open(input_file, "r") as json_file:
+    def simulate_trades(self):
+        with open(self.filepath, "r") as json_file:
             actions = json.load(json_file)
 
         for action in actions:
@@ -59,12 +60,3 @@ class Trader:
         print("Simulation complete.")
 
 
-if __name__ == '__main__':
-
-    ibex_predictions = [10000, 12000, 8000, 15000, 10000]
-    trade_execution = Trader(ibex_predictions)
-    profit = trade_execution.maximize_profit("./operations/actions.json")
-
-    # Simulate trades on a separate thread
-    trader = threading.Thread(target=trade_execution.simulate_trades, args=("./operations/actions.json",))
-    trader.start()

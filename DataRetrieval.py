@@ -22,7 +22,7 @@ class HistoricalDataRetrieval(object):
 
     def plot_data(self):
         # Plot the closing price
-        self.stock['Close'].plot(title='Stock Price of ' + self.name + ' for the last ' + str(self._days) + 'days.')
+        self.stock['Close'][-30:].plot(title='Stock Price of ' + self.name + ' for the last ' + str(30) + 'days.')
         plt.xlabel('Date')
         plt.ylabel('Price (USD)')
         plt.grid(True)

@@ -3,19 +3,20 @@ import matplotlib.pyplot as plt
 
 
 class Analytics:
-    def __init__(self, predictions, actual_value):
+    def __init__(self, predictions, actual_value,filepath):
         self.predictions = predictions
         self.actual_value = actual_value
+        self.filepath = filepath
         self.actions = []
 
-    def read_actions_from_file(self, file_path):
+    def read_actions_from_file(self):
         try:
-            with open(file_path, "r") as json_file:
+            with open(self.filepath, "r") as json_file:
                 self.actions = json.load(json_file)
         except FileNotFoundError:
-            print(f"Error: Actions file '{file_path}' not found.")
+            print(f"Error: Actions file '{self.filepath}' not found.")
         except json.JSONDecodeError:
-            print(f"Error: Failed to decode JSON in '{file_path}'. File may be improperly formatted.")
+            print(f"Error: Failed to decode JSON in '{self.filepath}'. File may be improperly formatted.")
 
     def calculate_actual_gains(self):
         if len(self.predictions) != len(self.actual_value):
@@ -55,32 +56,4 @@ class Analytics:
 
 
 
-    def plot_graphs(self):
-        if len(self.predictions) != len(self.actual_value):
-            print("Error: Length of predictions and actual values do not match.")
-            return
 
-        days = range(1, len(self.predictions) + 1)
-        plt.plot(days, self.predictions, label='Predictions', marker='o')
-        plt.plot(days, self.actual_value, label='Actual Values', marker='x')
-        plt.xlabel('Day')
-        plt.ylabel('Value')
-        plt.title('Predictions vs Actual Values')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
-
-if __name__ == '__main__':
-    # Example usage:
-    predictions = [10000, 12000, 8000, 15000, 10000]
-    actual_value = [11000, 13000, 9000, 14000, 11000]
-
-    analytics = Analytics(predictions, actual_value)
-    analytics.read_actions_from_file("operations/actions.json")
-
-    print("Actual Gains:", analytics.calculate_actual_gains())
-    print("Percentage Error:", analytics.calculate_percentage_error())
-    print("Average Prediction:", analytics.calculate_average_prediction())
-    print("Average Actual Value:", analytics.calculate_average_actual_value())
-    analytics.plot_graphs()
