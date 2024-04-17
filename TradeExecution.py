@@ -2,7 +2,7 @@ import json
 import threading
 import time
 import datetime
-class TradeExecution:
+class Trader:
     def __init__(self, predictions):
         self.predictions = predictions
 
@@ -62,7 +62,7 @@ class TradeExecution:
 if __name__ == '__main__':
 
     ibex_predictions = [10000, 12000, 8000, 15000, 10000]
-    trade_execution = TradeExecution(ibex_predictions)
+    trade_execution = Trader(ibex_predictions)
     profit = trade_execution.maximize_profit("./operations/actions.json")
 
     # Simulate trades on a separate thread

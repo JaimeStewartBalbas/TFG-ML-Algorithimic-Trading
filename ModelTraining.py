@@ -26,12 +26,14 @@ Model = {
 }
 
 class ModelTrainer(object):
-    def __init__(self, full_data):
+    def __init__(self, full_data,window_size):
         self.x_train = None
         self.y_train = None
         self.model_id = self.__select_model()
         self.model = None
         self.data = full_data
+        self.window_size = window_size
+        self.model_path = None
 
     def __select_model(self):
         """This method is used to select the model through the Tkinter interface."""
@@ -67,7 +69,6 @@ class ModelTrainer(object):
         train_data = scaled_df[0:training_data_len, :]
         x_train = []
         y_train = []
-        self.window_size = 30
         for i in range(self.window_size, len(train_data)):
             x_train.append(train_data[i - self.window_size:i, 0])
             y_train.append(train_data[i, 0])
@@ -119,8 +120,8 @@ class ModelTrainer(object):
     def graph_predictions(self):
         plt.figure(figsize=(16, 8))
         plt.title('historical price')
-        plt.plot(self.y_test)
-        plt.plot(self.predictions)
+        plt.plot(self.y_test[:-100])
+        plt.plot(self.predictions[:-100])
         plt.xlabel('Days', fontsize=18)
         plt.ylabel('Close_Price', fontsize=18)
         plt.legend(['test', 'predictions'], loc='lower right')
@@ -129,7 +130,7 @@ class ModelTrainer(object):
     def save_model(self):
         """This method saves the model in a file system, encrypted with AES-256."""
         model_type = list(Model.keys())[self.model_id]
-        filename = './models/' + model_type + '.enc'
+        self.model_path = './models/' + model_type + '.enc'
         if self.model is not None:
             # Generate a random 32-byte key for AES-256
             key = os.urandom(32)
@@ -161,7 +162,7 @@ class ModelTrainer(object):
                 json.dump(existing_keys, key_file)
 
             # Write the encrypted model to the file
-            with open(filename, 'wb') as file:
+            with open(self.model_path, 'wb') as file:
                 file.write(len(key).to_bytes(1, byteorder='big'))  # Write the key size (32 bytes) as a header
                 file.write(encrypted_model)
 

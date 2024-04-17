@@ -17,13 +17,16 @@ Model = {
     "GRU": 4,
 }
 
-class PredictionGeneration:
-    def __init__(self, model_path:str, window_size, model_id):
+class Predictor:
+    def __init__(self, model_path:str, window_size, model_id,ticker,start_date,end_date):
         self.model_file = model_path
         self.scaler = MinMaxScaler()
         self.window_size = window_size
         self.model_id = model_id
-        self.data = yf.download('^IBEX',start='2004-01-01', end='2024-01-01').filter(['Close'])
+        self.data = yf.download(ticker,
+                                start=start_date,
+                                end=end_date,
+                                progress=False).filter(['Close'])
         self.model = None
         self.scaler.fit_transform(np.array(self.data).reshape(-1, 1))
 
@@ -49,12 +52,13 @@ class PredictionGeneration:
 
         return decrypted_model
 
-    def load_model(self, decrypted_model):
+    def load_model(self):
         """Load the decrypted model."""
+        model = self.read_and_decrypt_model()
         if list(Model.keys())[self.model_id] in ['LSTM']:  # For TensorFlow Keras models
-            self.model = model_from_json(decrypted_model)
+            self.model = model_from_json(model)
         else:  # For scikit-learn models
-            self.model = pickle.loads(decrypted_model)
+            self.model = pickle.loads(model)
 
     def predict_future(self, num_days):
         """Predict future stock prices."""
@@ -97,14 +101,4 @@ class PredictionGeneration:
         plt.grid(True)
         plt.show()
 
-if __name__ == '__main__':
-    model_file = './models/SVM.enc'
-    model_id = Model["SVM"]
-    prediction_generator = PredictionGeneration(model_path=model_file, window_size=30, model_id=model_id)
 
-    decrypted_model = prediction_generator.read_and_decrypt_model()
-    prediction_generator.load_model(decrypted_model)
-
-    actual_values = yf.download('^IBEX', start='2024-01-01', end='2024-01-16')['Close']
-    future_predictions = prediction_generator.predict_future(10)
-    prediction_generator.plot_values(future_predictions, list(actual_values), title="Predicted vs Actual", xlabel="Days", ylabel="Price")
