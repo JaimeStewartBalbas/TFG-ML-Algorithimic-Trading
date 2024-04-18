@@ -19,7 +19,6 @@ class HistoricalDataRetrieval(object):
         stock_data.index = pd.to_datetime(stock_data.index)
         stock_data = stock_data.resample('B').ffill()
         return stock_data
-
     def plot_data(self):
         # Plot the closing price
         self.stock['Close'][-30:].plot(title='Stock Price of ' + self.name + ' for the last ' + str(30) + 'days.')

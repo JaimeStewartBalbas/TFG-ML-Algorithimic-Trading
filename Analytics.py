@@ -8,7 +8,6 @@ class Analytics:
         self.actual_value = actual_value
         self.filepath = filepath
         self.actions = []
-
     def read_actions_from_file(self):
         try:
             with open(self.filepath, "r") as json_file:

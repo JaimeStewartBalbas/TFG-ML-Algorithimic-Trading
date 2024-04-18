@@ -91,6 +91,7 @@ class Predictor:
         print("Length of predicted values:", len(values))
         print("Length of actual values:", len(actual_values))
 
+
         plt.figure(figsize=(10, 6))
         plt.plot(values, label='Predicted', color='blue')
         plt.plot(actual_values, label='Actual', color='green')

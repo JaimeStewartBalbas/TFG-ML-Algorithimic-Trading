@@ -37,6 +37,7 @@ if __name__ == '__main__':
     # We create our model trainer
     trainer = ModelTrainer(full_data=historical_data.stock, window_size=30)
 
+
     # We prepare and train our model.
     trainer.prepare_data()
     trainer.train_model()

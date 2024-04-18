@@ -179,6 +179,7 @@ class ModelTrainer(object):
         else:  # For scikit-learn models
             serialized_model = pickle.dumps(model)
 
+
         # Convert serialized_model to bytes if it's not already
         if not isinstance(serialized_model, bytes):
             serialized_model = serialized_model.encode()
