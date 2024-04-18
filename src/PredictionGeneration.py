@@ -36,7 +36,7 @@ class Predictor:
             key_size = int.from_bytes(file.read(1), byteorder='big')
             encrypted_model = file.read()
 
-        with open("./keys.json", 'r') as key_file:
+        with open("../keys.json", 'r') as key_file:
             keys = json.load(key_file)
             key_entry = next((entry for entry in keys if entry["model_id"] == str(self.model_id)), None)
             if key_entry:
@@ -90,6 +90,7 @@ class Predictor:
 
         print("Length of predicted values:", len(values))
         print("Length of actual values:", len(actual_values))
+
 
         plt.figure(figsize=(10, 6))
         plt.plot(values, label='Predicted', color='blue')

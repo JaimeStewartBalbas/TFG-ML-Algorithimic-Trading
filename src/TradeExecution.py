@@ -7,6 +7,7 @@ class Trader:
         self.predictions = predictions
         self.filepath = filepath
 
+
     def maximize_profit(self):
         if not self.predictions or len(self.predictions) < 2:
             print("No profit can be made.")

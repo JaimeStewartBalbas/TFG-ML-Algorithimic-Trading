@@ -25,6 +25,7 @@ class RealTimeCandlestick:
         # Schedule next update after 10 seconds
         self.root.after(10000, self.update_graph)
 
+
     def run(self):
         self.root.mainloop()
 

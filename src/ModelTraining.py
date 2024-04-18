@@ -15,7 +15,7 @@ import pickle
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-from DataRetrieval import HistoricalDataRetrieval
+from src.DataRetrieval import HistoricalDataRetrieval
 import json
 
 Model = {
@@ -83,7 +83,13 @@ class ModelTrainer(object):
         if self.model_id in [2]:
             self.x_train = np.reshape(self.x_train, (self.x_train.shape[0], self.x_train.shape[1], 1))
             self.x_test = np.reshape(self.x_test, (self.x_test.shape[0], self.x_test.shape[1], 1))
-        return self.x_train, self.y_train, self.x_test, self.y_test
+
+        # Adjust the length of x_test
+        len_test_data = len(self.data) - len(self.x_train)  # Calculate the length of all available testing data
+        len_x_test = len_test_data - self.window_size  # Adjust for window size if applicable
+
+        # Return the prepared data
+        return self.x_train, self.y_train, self.x_test[:len_x_test], self.y_test[:len_x_test]
 
     def train_model(self):
         if self.model_id == 0:  # SVM
@@ -130,7 +136,7 @@ class ModelTrainer(object):
     def save_model(self):
         """This method saves the model in a file system, encrypted with AES-256."""
         model_type = list(Model.keys())[self.model_id]
-        self.model_path = './models/' + model_type + '.enc'
+        self.model_path = '../models/' + model_type + '.enc'
         if self.model is not None:
             # Generate a random 32-byte key for AES-256
             key = os.urandom(32)
@@ -140,7 +146,7 @@ class ModelTrainer(object):
             encrypted_model = self.encrypt_model(self.model, key, iv)
 
             # Load existing keys from JSON file
-            key_iv_filename = './keys.json'
+            key_iv_filename = '../keys.json'
             if os.path.exists(key_iv_filename):
                 with open(key_iv_filename, 'r') as key_file:
                     existing_keys = json.load(key_file)
@@ -178,6 +184,7 @@ class ModelTrainer(object):
             serialized_model = model.to_json()
         else:  # For scikit-learn models
             serialized_model = pickle.dumps(model)
+
 
         # Convert serialized_model to bytes if it's not already
         if not isinstance(serialized_model, bytes):

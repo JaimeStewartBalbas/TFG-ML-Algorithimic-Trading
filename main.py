@@ -1,13 +1,12 @@
-from DataRetrieval import HistoricalDataRetrieval
-from RealtimeRetrieval import RealTimeCandlestick
-from ModelTraining import ModelTrainer
-from PredictionGeneration import Predictor
-import warnings
+from src.DataRetrieval import HistoricalDataRetrieval
+from src.RealtimeRetrieval import RealTimeCandlestick
+from src.ModelTraining import ModelTrainer
+from src.PredictionGeneration import Predictor
 import threading
 import tkinter as tk
-from Analytics import Analytics
+from src.Analytics import Analytics
 
-from TradeExecution import Trader
+from src.TradeExecution import Trader
 
 def candle_thread():
     root = tk.Tk()
@@ -36,6 +35,7 @@ if __name__ == '__main__':
 
     # We create our model trainer
     trainer = ModelTrainer(full_data=historical_data.stock, window_size=30)
+
 
     # We prepare and train our model.
     trainer.prepare_data()

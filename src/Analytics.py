@@ -1,14 +1,12 @@
 import json
 import matplotlib.pyplot as plt
 
-
 class Analytics:
     def __init__(self, predictions, actual_value,filepath):
         self.predictions = predictions
         self.actual_value = actual_value
         self.filepath = filepath
         self.actions = []
-
     def read_actions_from_file(self):
         try:
             with open(self.filepath, "r") as json_file:
