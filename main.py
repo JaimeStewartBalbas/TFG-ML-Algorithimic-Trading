@@ -2,16 +2,13 @@ from DataRetrieval import HistoricalDataRetrieval
 from RealtimeRetrieval import RealTimeCandlestick
 from ModelTraining import ModelTrainer
 from PredictionGeneration import Predictor
-import warnings
 import threading
 import tkinter as tk
 from Analytics import Analytics
 
 from TradeExecution import Trader
 
-def candle_thread():
-    root = tk.Tk()
-    candlestick = RealTimeCandlestick(root)
+
 
 
 if __name__ == '__main__':
@@ -26,10 +23,8 @@ if __name__ == '__main__':
                                           start_date="2024-01-02",
                                           end_date="2024-02-13")
 
-    candle_thread = threading.Thread(target=candle_thread,daemon=True)
-    candle_thread.start()
 
-    print(actual_data.stock)
+
     # We take an overview of our data.
     print(historical_data.stock)
     historical_data.plot_data()
@@ -75,4 +70,16 @@ if __name__ == '__main__':
     print("Percentage Error:", analytics.calculate_percentage_error())
     print("Average Prediction:", analytics.calculate_average_prediction())
     print("Average Actual Value:", analytics.calculate_average_actual_value())
+    print("RMSE Error: ", analytics.calculate_rmse())
+    print("Correlation Coefficient:", analytics.calculate_correlation_coefficient())
+    print("MAPE:", analytics.calculate_mape())
+    print("Directional Accuracy:", analytics.calculate_directional_accuracy())
+    predicted_volatility_std, actual_volatility_std = analytics.calculate_volatility()
+    print("Predicted Volatility ", predicted_volatility_std)
+    print("Actual Volatility ", actual_volatility_std)
+    print("Predictions Standard Deviation:", analytics.calculate_predictions_std())
+    print("Actual Values Standard Deviation:", analytics.calculate_actual_values_std())
+
+    candlestick = RealTimeCandlestick(tk.Tk())
+    candlestick.run()
 
