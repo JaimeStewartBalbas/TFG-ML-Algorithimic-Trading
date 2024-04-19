@@ -128,8 +128,8 @@ class ModelTrainer(object):
         plt.title('historical price')
         plt.plot(self.y_test[:-100])
         plt.plot(self.predictions[:-100])
-        plt.xlabel('Days', fontsize=18)
-        plt.ylabel('Close_Price', fontsize=18)
+        plt.xlabel('Number of Days', fontsize=18)
+        plt.ylabel('Closing Price (USD)', fontsize=18)
         plt.legend(['test', 'predictions'], loc='lower right')
         plt.show()
 
