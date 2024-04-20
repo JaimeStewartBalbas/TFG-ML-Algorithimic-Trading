@@ -1,17 +1,16 @@
-from DataRetrieval import HistoricalDataRetrieval
-from RealtimeRetrieval import RealTimeCandlestick
-from ModelTraining import ModelTrainer
-from PredictionGeneration import Predictor
-import threading
+from src.DataRetrieval import HistoricalDataRetrieval
+from src.RealtimeRetrieval import RealTimeCandlestick
+from src.ModelTraining import ModelTrainer
+from src.PredictionGeneration import Predictor
 import tkinter as tk
-from Analytics import Analytics
-
-from TradeExecution import Trader
+from src.Analytics import Analytics
+from src.TradeExecution import Trader
 
 
 
 
 if __name__ == '__main__':
+
     # We retrieve data from Historical Data Retrieval Module to train our model.
     historical_data = HistoricalDataRetrieval(name="Ibex 35",
                                               ticker="^IBEX",
