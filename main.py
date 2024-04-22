@@ -45,9 +45,9 @@ if __name__ == '__main__':
     predictor = Predictor(model_path=trainer.model_path,
                           window_size=trainer.window_size,
                           model_id=trainer.model_id,
-                          ticker='^IBEX',
-                          start_date='2000-01-01',
-                          end_date='2024-01-01')
+                          ticker=historical_data.ticker,
+                          start_date=historical_data.start_date,
+                          end_date=historical_data.end_date)
 
     # We load the model in the predictor and predict the following 30 days.
     predictor.load_model()
