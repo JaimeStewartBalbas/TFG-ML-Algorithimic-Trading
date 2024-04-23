@@ -136,7 +136,7 @@ class ModelTrainer(object):
     def save_model(self):
         """This method saves the model in a file system, encrypted with AES-256."""
         model_type = list(Model.keys())[self.model_id]
-        self.model_path = '../models/' + model_type + '.enc'
+        self.model_path = './models/' + model_type + '.enc'
         if self.model is not None:
             # Generate a random 32-byte key for AES-256
             key = os.urandom(32)

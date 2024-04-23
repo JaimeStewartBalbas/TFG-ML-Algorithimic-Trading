@@ -83,7 +83,7 @@ class Predictor:
 
         return future_predictions
 
-    def plot_values(self, values, actual_values, title="Predicted vs Actual", xlabel="Days", ylabel="Price"):
+    def plot_values(self, values, actual_values, title="Predicted vs Actual", xlabel="Days", ylabel="Closing Price (USD)"):
         """Plot predicted and actual values."""
         if len(values) != len(actual_values):
             raise ValueError(f"Lengths of values ({len(values)}) and actual_values ({len(actual_values)}) do not match")
