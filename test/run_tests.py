@@ -6,6 +6,7 @@ from test.TestModelTrainer import TestModelTrainer
 from test.TestPredictionGeneration import TestPredictor
 from test.TestTradeExecution import TestTrader
 from test.TestAnalytics import TestAnalytics
+from test.TestMain import TestMain
 
 def suite():
     loader = unittest.TestLoader()
@@ -16,6 +17,8 @@ def suite():
     suite.addTests(loader.loadTestsFromTestCase(TestPredictor))
     suite.addTests(loader.loadTestsFromTestCase(TestTrader))
     suite.addTests(loader.loadTestsFromTestCase(TestAnalytics))
+    suite.addTests(loader.loadTestsFromTestCase(TestMain))
+
 
     suite.addTests(loader.loadTestsFromTestCase(TestRealTimeCandlestick))
 
